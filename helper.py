@@ -48,3 +48,44 @@ def nations_over_time(df,col):
     nations_over_time = df.drop_duplicates(['Year', col])['Year'].value_counts().reset_index().sort_values('Year')
     nations_over_time = nations_over_time.rename(columns={'Year': 'Editions', 'count':col})
     return nations_over_time
+
+
+def most_successful(df, Sport):
+    temp_df = df.dropna(subset=['Medal'])
+
+    if Sport != 'Overall':
+        temp_df = temp_df[temp_df['Sport'] == Sport]
+
+    x = temp_df['Name'].value_counts().head(15).reset_index().merge(df, how='left')[['Name', 'count','Sport', 'region']].drop_duplicates('Name')
+    x.rename(columns={ 'count': 'Medals'}, inplace=True)
+    return x
+
+def yearwise_medal_tally(df,country):
+    temp_df = df.dropna(subset=['Medal'])
+    temp_df.drop_duplicates(subset=['Team', 'NOC', 'Games', 'Year', 'City', 'Sport', 'Event', 'Medal'], inplace=True)
+
+    new_df = temp_df[temp_df['region'] == country]
+    final_df = new_df.groupby('Year').count()['Medal'].reset_index()
+
+    return final_df
+
+def country_event_heatmap(df,country):
+    temp_df = df.dropna(subset=['Medal'])
+    temp_df.drop_duplicates(subset=['Team', 'NOC', 'Games', 'Year', 'City', 'Sport', 'Event', 'Medal'], inplace=True)
+
+    new_df = temp_df[temp_df['region'] == country]
+    pt = new_df.pivot_table(index='Sport', columns='Year', values='Medal', aggfunc='count').fillna(0)
+
+    return pt
+
+
+def most_successful_countrywise(df, region):
+    temp_df = df.dropna(subset=['Medal'])
+
+    temp_df = temp_df[temp_df['region'] == region]
+
+    x = temp_df['Name'].value_counts().reset_index().head(10).merge(df, how='left')[
+        [ 'Name','count', 'Sport']].drop_duplicates('Name')
+    x.rename(columns={ 'count': 'Medals'}, inplace=True)
+    return x
+

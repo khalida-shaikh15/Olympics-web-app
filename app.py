@@ -1,7 +1,8 @@
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 import helper
 import preprocessor
@@ -84,3 +85,41 @@ if user_menu=='Overall Analysis':
     st.title('Participating Athletes Over Time')
     st.plotly_chart(fig)
 
+    st.title("No. of Events Over Time(Every Sport)")
+    fig,ax = plt.subplots(figsize=(20,20))
+    x = df.drop_duplicates(['Year', 'Sport', 'Event'])
+    ax = sns.heatmap(x.pivot_table(index='Sport', columns='Year', values='Event', aggfunc='count').fillna(0).astype('int'),
+                annot=True)
+
+    st.pyplot(fig)
+
+    st.title('Most Successful Athletes')
+    sport_list = df['Sport'].unique().tolist()
+    sport_list.sort()
+    sport_list.insert(0,'Overall')
+
+    selected_sport = st.selectbox('Select a Sport',sport_list)
+    x = helper.most_successful(df,selected_sport)
+    st.table(x)
+
+if user_menu == 'Country-Wise Analysis':
+    st.sidebar.title('country-Wise Analysis')
+
+    country_list = df['region'].dropna().unique().tolist()
+    country_list.sort()
+    selected_country=st.sidebar.selectbox('Select a Country',country_list)
+    country_df = helper.yearwise_medal_tally(df,selected_country)
+    fig = px.line(country_df, x='Year', y='Medal')
+    st.title(selected_country + ' Medal Tally Over The Years')
+    st.plotly_chart(fig)
+
+    st.title(selected_country + ' excel in the following sports')
+    pt = helper.country_event_heatmap(df,selected_country)
+    fig, ax = plt.subplots(figsize=(20,20))
+    ax = sns.heatmap(pt,annot=True)
+
+    st.pyplot(fig)
+
+    st.title('Top 10 Athletes of ' + selected_country )
+    top10_df=helper.most_successful_countrywise(df,selected_country)
+    st.table(top10_df)
