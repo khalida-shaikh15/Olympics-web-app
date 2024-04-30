@@ -3,9 +3,11 @@ import streamlit as st
 import plotly.express as px
 import matplotlib.pyplot as plt
 import seaborn as sns
+import plotly.figure_factory as ff
 
 import helper
 import preprocessor
+from PIL import Image
 
 df=pd.read_csv('athlete_events.csv')
 df2=pd.read_csv('noc_regions.csv')
@@ -13,12 +15,16 @@ df2=pd.read_csv('noc_regions.csv')
 df = preprocessor.preprocess(df,df2)
 
 st.sidebar.title("Olympics Analysis")
+st.sidebar.image("https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.pngwing.com%2Fen%2Fsearch%3Fq%3Dolympic&psig=AOvVaw0vldlGcvT-5bGmbR-pi34w&ust=1714581586701000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCPjQytS56oUDFQAAAAAdAAAAABAV")
+
+
 user_menu=st.sidebar.radio(
     'select an option',
     ('Medal Tally','Overall Analysis','Country-Wise Analysis','Athlete wise Analysis')
 )
 
 #st.dataframe(df)
+
 
 if user_menu == "Medal Tally":
     st.sidebar.header('Medal Tally')
@@ -123,3 +129,59 @@ if user_menu == 'Country-Wise Analysis':
     st.title('Top 10 Athletes of ' + selected_country )
     top10_df=helper.most_successful_countrywise(df,selected_country)
     st.table(top10_df)
+
+if user_menu == 'Athlete wise Analysis':
+
+    athlete_df = df.drop_duplicates(subset=['Name', 'region'])
+
+    x1 = athlete_df['Age'].dropna()
+    x2 = athlete_df[athlete_df['Medal'] == 'Gold']['Age'].dropna()
+    x3 = athlete_df[athlete_df['Medal'] == 'Silver']['Age'].dropna()
+    x4 = athlete_df[athlete_df['Medal'] == 'Bronze']['Age'].dropna()
+
+    fig = ff.create_distplot([x1, x2, x3, x4], ['Overall Age', 'Gold Medalist', 'Silver Medalist', 'Bronzze  Medalist'],
+                             show_hist=False, show_rug=False)
+    fig.update_layout(xaxis_title='Age', yaxis_title='Count',autosize= False, width= 800,height= 600)
+    st.title('Age Distribution')
+    fig.show()
+    st.plotly_chart(fig)
+
+
+    x = []
+    name = []
+    famous_sports = ['Basketball', 'Juddo', 'Football', 'Tug-Of-War', 'Athletics',
+                      'Swimming', 'Badminton', 'Sailing', 'Gymnastics',
+                      'Art Competitions', 'Handball', 'Weightlifting', 'Wrestling',
+                      'Water Polo', 'Hockey', 'Rowing', 'Fencing', 'Equestrianism',
+                      'Shooting', 'Boxing', 'Taekwondo', 'Cycling', 'Diving', 'Canoeing',
+                      'Tennis', 'Golf', 'Softball', 'Archery',
+                      'Volleyball', 'Synchronized Swimming', 'Table Tennis', 'Baseball',
+                      'Rhythmic Gymnastics', 'Rugby Sevens', 'Trampolining',
+                      'Beach Volleyball', 'Triathlon', 'Rugby', 'Polo',
+                      'Cricket', 'Ice Hockey']
+    for sport in famous_sports:
+        temp_df = athlete_df[athlete_df['Sport'] == sport]
+        gold_ages = temp_df[temp_df['Medal'] == 'Gold']['Age'].dropna()
+        if not gold_ages.empty:
+            x.append(gold_ages)
+            name.append(sport)
+
+    fig = ff.create_distplot(x, name, show_hist=False, show_rug=False)
+    fig.update_layout(xaxis_title='Age', yaxis_title='Count',autosize= False, width= 800,height= 600)
+    st.title('Distribution of Age wrt Sports')
+    st.plotly_chart(fig)
+
+    sport_list = df['Sport'].unique().tolist()
+    sport_list.sort()
+    sport_list.insert(0, 'Overall')
+    selected_sport = st.selectbox('Select a Sport', sport_list)
+    temp_df = helper.weight_v_height(df,selected_sport)
+    fig,ax = plt.subplots()
+    ax = sns.scatterplot(x=temp_df['Weight'],y=temp_df['Height'],hue=temp_df['Medal'],style=temp_df['Sex'],s=60)
+    st.title("Height vs Weight")
+    st.pyplot(fig)
+
+    st.title('Men Vs Women Participation Over The Year')
+    final = helper.men_vs_women(df)
+    fig = px.line(final, x='Year', y=['Male', 'Female'])
+    st.plotly_chart(fig)

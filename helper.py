@@ -89,3 +89,23 @@ def most_successful_countrywise(df, region):
     x.rename(columns={ 'count': 'Medals'}, inplace=True)
     return x
 
+def weight_v_height(df,sport):
+    athlete_df = df.drop_duplicates(subset=["Name","region"])
+    athlete_df['Medal'].fillna("No Medal",inplace=True)
+    if sport != 'Overall':
+        temp_df = athlete_df[athlete_df['Sport'] == sport]
+        return temp_df
+    else:
+        return athlete_df
+
+def men_vs_women(df):
+    athlete_df = df.drop_duplicates(subset=["Name", "region"])
+
+    Men = athlete_df[athlete_df['Sex'] == 'M'].groupby('Year').count()['Name'].reset_index()
+    women = athlete_df[athlete_df['Sex'] == 'F'].groupby('Year').count()['Name'].reset_index()
+    final = Men.merge(women, on='Year', how='left')
+    final.rename(columns={'Name_x': 'Male', 'Name_y': 'Female'}, inplace=True)
+
+    final.fillna(0, inplace=True)
+    return final
+
