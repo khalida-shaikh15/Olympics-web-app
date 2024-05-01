@@ -4,10 +4,12 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.figure_factory as ff
+import numpy as np
 
 import helper
 import preprocessor
 from PIL import Image
+from rembg import remove
 
 df=pd.read_csv('athlete_events.csv')
 df2=pd.read_csv('noc_regions.csv')
@@ -15,7 +17,16 @@ df2=pd.read_csv('noc_regions.csv')
 df = preprocessor.preprocess(df,df2)
 
 st.sidebar.title("Olympics Analysis")
-st.sidebar.image("https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.pngwing.com%2Fen%2Fsearch%3Fq%3Dolympic&psig=AOvVaw0vldlGcvT-5bGmbR-pi34w&ust=1714581586701000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCPjQytS56oUDFQAAAAAdAAAAABAV")
+
+input = Image.open("images5.png")
+output = remove(input)
+st.sidebar.image(output,width=300)
+
+input1 = Image.open("images6.jpg")
+output2 = remove(input1)
+output.putalpha(70)
+col1,col2,col3 = st.columns([20,10,20])
+col2.image(output2,width=80)
 
 
 user_menu=st.sidebar.radio(
